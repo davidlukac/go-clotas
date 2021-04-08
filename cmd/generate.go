@@ -38,7 +38,7 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("generate called")
 		fmt.Println(clotas.GenerateName("foo"))
-		fmt.Println(clotas.GetFileListForDay("clotas", time.Now()))
+		fmt.Println(clotas.GetFileListForDay(clotas.DefaultTargetFolder, time.Now()))
 	},
 }
 
