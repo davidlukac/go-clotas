@@ -7,15 +7,15 @@ import (
 	"time"
 )
 
-func GetFileListForDay(folder string, t time.Time) []string {
+func GetFileListForDay(folder string, t time.Time) []ClotaFile {
 	dir, _ := os.Open(folder)
 	files, _ := dir.Readdir(0)
 
-	var matchingFiles []string
+	var matchingFiles []ClotaFile
 
 	for _, file := range files {
 		if !file.IsDir() && strings.HasPrefix(file.Name(), t.Format(dateLayout())) {
-			matchingFiles = append(matchingFiles, file.Name())
+			matchingFiles = append(matchingFiles, *ClotaFile{}.NewFromFileInfo(file))
 		}
 	}
 
