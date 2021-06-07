@@ -6,20 +6,43 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type ClotaFile struct {
-	Name       string
-	path       string
-	info       os.FileInfo
-	extension  string
+	// YYYYMMDD-NNNN-scriptName.sh
 	dateStr    string
+	number     int				// NNNN - serial of the script within the day
 	numberStr  string
-	number     int
-	scriptName string
+	scriptName string			// scriptName - defaults to 'script'
+	info       os.FileInfo		// Fileinfo if the file already exists
+	Name       string			// filename
+	path       string
+	extension  string
 }
 
-func New(file string) *ClotaFile {
+func (ClotaFile) New(scriptName string) *ClotaFile {
+	t := time.Now()
+	f := new(ClotaFile)
+
+	f.dateStr = time.Now().Format(dateLayout())
+	f.number  = 1
+	f.numberStr = strconv.Itoa(f.number)
+	f.scriptName = scriptName
+	f.extension = DefaultFileType
+
+	f.Name = GenerateName(f.scriptName, t, f.number)
+	cwd, _ := os.Getwd()
+	f.path = filepath.Join(cwd, DefaultTargetFolder, f.Name)
+
+	file, _ := os.OpenFile(f.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file.Close()
+	f.info, _ = os.Stat(f.path)
+
+	return f
+}
+
+func (ClotaFile) NewFromFile(file string) *ClotaFile {
 	f := new(ClotaFile)
 
 	if filepath.IsAbs(file) {
@@ -73,6 +96,8 @@ func (ClotaFile) GetNextFromList(files []ClotaFile, scriptName string) *ClotaFil
 	return ClotaFile{}.GetNext(files[len(files)-1], scriptName)
 }
 
+// GetNext /**
+// Generate new ClotaFile object, with incremented serial number from an existing provided file.
 func (ClotaFile) GetNext(file ClotaFile, scriptName string) *ClotaFile {
 	next := new(ClotaFile)
 	next.extension = DefaultFileType
