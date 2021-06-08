@@ -5,12 +5,13 @@ import (
 	"time"
 )
 
-func GenerateName(name string) string {
-	return fmt.Sprintf("%s%s0001%s%s.%s",
-		time.Now().Format(dateLayout()),
+func GenerateName(scriptName string, t time.Time, n int) string {
+	return fmt.Sprintf("%s%s%03d%s%s.%s",
+		t.Format(dateLayout()),
 		DefaultSeparator,
+		n,
 		DefaultSeparator,
-		name,
+		scriptName,
 		DefaultFileType)
 }
 

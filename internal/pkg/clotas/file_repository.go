@@ -2,20 +2,21 @@ package clotas
 
 import (
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
 )
 
-func GetFileListForDay(folder string, t time.Time) []string {
+func GetFileListForDay(folder string, t time.Time) []ClotaFile {
 	dir, _ := os.Open(folder)
 	files, _ := dir.Readdir(0)
 
-	var matchingFiles []string
+	var matchingFiles []ClotaFile
 
 	for _, file := range files {
 		if !file.IsDir() && strings.HasPrefix(file.Name(), t.Format(dateLayout())) {
-			matchingFiles = append(matchingFiles, file.Name())
+			matchingFiles = append(matchingFiles, *ClotaFile{}.NewFromFileInfo(file))
 		}
 	}
 
@@ -43,4 +44,20 @@ func GetFiles(folder string) []string {
 	dir.Close()
 
 	return matchingFiles
+}
+
+// AssureClotasDir
+// Make sure Clotas folder exists.
+func AssureClotasDir(folder string) {
+	cwd, _ := os.Getwd()
+
+	if folder == "" {
+		folder = filepath.Join(cwd, DefaultTargetFolder)
+	}
+
+	_, err := os.Stat(folder)
+
+	if err != nil {
+		os.Mkdir(folder, 0755)
+	}
 }

@@ -28,7 +28,7 @@ import (
 // generateCmd represents the generate command
 var generateCmd = &cobra.Command{
 	Use:   "generate",
-	Short: "A brief description of your command",
+	Short: "Generate new CLOTA file",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -36,9 +36,22 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("generate called")
-		fmt.Println(clotas.GenerateName("foo"))
-		fmt.Println(clotas.GetFileListForDay(clotas.DefaultTargetFolder, time.Now()))
+		t := time.Now()
+
+		// Make sure clotas folder exists
+		clotas.AssureClotasDir(clotas.DefaultTargetFolder)
+
+		// Check for existing files with today's date.
+		existingDayFiles := clotas.GetFileListForDay(clotas.DefaultTargetFolder, t)
+
+		newFile := clotas.ClotaFile{}.New("", -1, nil)
+
+		if len(existingDayFiles) > 0 {
+			newFile = clotas.ClotaFile{}.GetNextFromList(existingDayFiles, clotas.DefaultScriptName)
+		}
+
+		newFile.CreateFile()
+		fmt.Println(fmt.Sprintf("Generating new Clota file %s/%s", clotas.DefaultTargetFolder, newFile.Name))
 	},
 }
 
