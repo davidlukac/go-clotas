@@ -36,16 +36,22 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		t := time.Now()
+
+		// Make sure clotas folder exists
+		clotas.AssureClotasDir(clotas.DefaultTargetFolder)
+
 		// Check for existing files with today's date.
-		files := clotas.GetFileListForDay(clotas.DefaultTargetFolder, time.Now())
+		existingDayFiles := clotas.GetFileListForDay(clotas.DefaultTargetFolder, t)
 
-		newFile := clotas.ClotaFile{}.New("foo")
+		newFile := clotas.ClotaFile{}.New("", -1, nil)
 
-		if len(files) > 0 {
-			newFile = clotas.ClotaFile{}.GetNextFromList(files, clotas.DefaultScriptName)
+		if len(existingDayFiles) > 0 {
+			newFile = clotas.ClotaFile{}.GetNextFromList(existingDayFiles, clotas.DefaultScriptName)
 		}
 
-		fmt.Println(fmt.Sprintf("Generating new Clota file %s", newFile.Name))
+		newFile.CreateFile()
+		fmt.Println(fmt.Sprintf("Generating new Clota file %s/%s", clotas.DefaultTargetFolder, newFile.Name))
 	},
 }
 

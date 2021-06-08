@@ -2,6 +2,7 @@ package clotas
 
 import (
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -43,4 +44,20 @@ func GetFiles(folder string) []string {
 	dir.Close()
 
 	return matchingFiles
+}
+
+// AssureClotasDir
+// Make sure Clotas folder exists.
+func AssureClotasDir(folder string) {
+	cwd, _ := os.Getwd()
+
+	if folder == "" {
+		folder = filepath.Join(cwd, DefaultTargetFolder)
+	}
+
+	_, err := os.Stat(folder)
+
+	if err != nil {
+		os.Mkdir(folder, 0755)
+	}
 }

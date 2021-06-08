@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -12,32 +13,49 @@ import (
 type ClotaFile struct {
 	// YYYYMMDD-NNNN-scriptName.sh
 	dateStr    string
-	number     int				// NNNN - serial of the script within the day
+	number     int // NNN - serial of the script within the day
 	numberStr  string
-	scriptName string			// scriptName - defaults to 'script'
-	info       os.FileInfo		// Fileinfo if the file already exists
-	Name       string			// filename
+	scriptName string      // scriptName - defaults to 'script'
+	info       os.FileInfo // Fileinfo if the file already exists
+	Name       string      // filename
 	path       string
 	extension  string
 }
 
-func (ClotaFile) New(scriptName string) *ClotaFile {
-	t := time.Now()
+// New
+// Create new ClotaFile object from basic provided info. No actual file is created.
+// @param scriptName string	(Optional) If empty, defaults to DefaultScriptName.
+// @param n int 			(Optional) If negative number is provided defaults to 1.
+// @param t *time.Time		(Optional) If empty, set to Now; used for the date in the file name.
+func (ClotaFile) New(scriptName string, n int, t *time.Time) *ClotaFile {
+	var tt time.Time
+
+	if t == nil {
+		tt = time.Now()
+	} else {
+		tt = *t
+	}
+
 	f := new(ClotaFile)
 
-	f.dateStr = time.Now().Format(dateLayout())
-	f.number  = 1
-	f.numberStr = strconv.Itoa(f.number)
+	f.dateStr = tt.Format(dateLayout())
+
+	if n < 0 {
+		f.number = 1
+	} else {
+		f.number = n
+	}
+
+	f.numberStr = fmt.Sprintf("%03d", f.number)
+
+	if scriptName == "" {
+		scriptName = DefaultScriptName
+	}
 	f.scriptName = scriptName
+
 	f.extension = DefaultFileType
 
-	f.Name = GenerateName(f.scriptName, t, f.number)
-	cwd, _ := os.Getwd()
-	f.path = filepath.Join(cwd, DefaultTargetFolder, f.Name)
-
-	file, _ := os.OpenFile(f.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	file.Close()
-	f.info, _ = os.Stat(f.path)
+	f.Name = GenerateName(f.scriptName, tt, f.number)
 
 	return f
 }
@@ -92,26 +110,29 @@ func (ClotaFile) NewFromFileInfo(file os.FileInfo) *ClotaFile {
 	return f
 }
 
+// GetNextFromList /**
+// Generate new ClotaFile object from provided list of ClotaFile-s with incremented serial.
 func (ClotaFile) GetNextFromList(files []ClotaFile, scriptName string) *ClotaFile {
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].Name < files[j].Name
+	})
+
 	return ClotaFile{}.GetNext(files[len(files)-1], scriptName)
 }
 
 // GetNext /**
 // Generate new ClotaFile object, with incremented serial number from an existing provided file.
 func (ClotaFile) GetNext(file ClotaFile, scriptName string) *ClotaFile {
-	next := new(ClotaFile)
-	next.extension = DefaultFileType
-	next.number = file.number + 1
-	next.numberStr = fmt.Sprintf("%03d", next.number)
-	next.dateStr = file.dateStr
+	return ClotaFile{}.New(scriptName, file.number+1, nil)
+}
 
-	if len(scriptName) == 0 {
-		scriptName = DefaultScriptName
-	}
+// CreateFile /**
+// Create actual file on the file system and update the object with information.
+func (cf *ClotaFile) CreateFile() {
+	cwd, _ := os.Getwd()
+	cf.path = filepath.Join(cwd, DefaultTargetFolder, cf.Name)
 
-	next.scriptName = scriptName
-	next.Name = fmt.Sprintf("%s%s%s%s%s.%s",
-		next.dateStr, DefaultSeparator, next.numberStr, DefaultSeparator, next.scriptName, DefaultFileType)
-
-	return next
+	file, _ := os.OpenFile(cf.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, DefaultFileMode)
+	file.Close()
+	cf.info, _ = os.Stat(cf.path)
 }
