@@ -166,7 +166,7 @@ func (cf *ClotaFile) CreateFile() {
 		panic(err)
 	}
 
-	// Make sure the file executable bit.
+	// Make sure the file has the executable bit.
 	s, err := file.Stat()
 	if err != nil {
 		panic(err)
