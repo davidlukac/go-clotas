@@ -1,9 +1,9 @@
 .PHONY: build
 build:
-	go build -o bin/clotas main.go
+	go build -o bin/clotas cmd/clotas/main.go
 
 run:
-	go run main.go
+	go run cmd/clotas/main.go
 
 clean:
 	go clean

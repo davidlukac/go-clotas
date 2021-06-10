@@ -1,5 +1,5 @@
-// Package cmd /*
-package cmd
+// Package commands /*
+package commands
 
 /*
 Copyright © 2021 NAME HERE <EMAIL ADDRESS>

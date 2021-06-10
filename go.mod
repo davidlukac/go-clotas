@@ -1,4 +1,4 @@
-module clotas
+module github.com/davidlukac/go-clotas
 
 go 1.15
 

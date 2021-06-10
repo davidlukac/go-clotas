@@ -1,5 +1,5 @@
-// Package cmd /*
-package cmd
+// Package commands /*
+package commands
 
 /*
 Copyright © 2021 NAME HERE <EMAIL ADDRESS>
@@ -18,8 +18,8 @@ limitations under the License.
 */
 
 import (
-	"clotas/internal/pkg/clotas"
 	"fmt"
+	"github.com/davidlukac/go-clotas/internal/pkg/clotas"
 	"time"
 
 	"github.com/spf13/cobra"
