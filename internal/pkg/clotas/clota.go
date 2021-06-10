@@ -3,16 +3,19 @@ package clotas
 import (
 	"fmt"
 	"os"
+	"os/user"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 )
 
 type ClotaFile struct {
 	// YYYYMMDD-NNNN-scriptName.sh
 	dateStr    string
+	timestamp  time.Time
 	number     int // NNN - serial of the script within the day
 	numberStr  string
 	scriptName string      // scriptName - defaults to 'script'
@@ -38,6 +41,7 @@ func (ClotaFile) New(scriptName string, n int, t *time.Time) *ClotaFile {
 
 	f := new(ClotaFile)
 
+	f.timestamp = tt
 	f.dateStr = tt.Format(dateLayout())
 
 	if n < 0 {
@@ -129,10 +133,49 @@ func (ClotaFile) GetNext(file ClotaFile, scriptName string) *ClotaFile {
 // CreateFile /**
 // Create actual file on the file system and update the object with information.
 func (cf *ClotaFile) CreateFile() {
-	cwd, _ := os.Getwd()
+	var err error
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
 	cf.path = filepath.Join(cwd, DefaultTargetFolder, cf.Name)
 
-	file, _ := os.OpenFile(cf.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, DefaultFileMode)
+	t, err := template.New("clota").Parse(DefaultTemplate)
+	if err != nil {
+		panic(err)
+	}
+
+	userInfo, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+
+	tmplData := map[string]interface{}{
+		"Name":               cf.Name,
+		"GeneratedBy":        userInfo.Name,
+		"GeneratedTimestamp": cf.timestamp.Format(time.RFC3339),
+	}
+
+	file, err := os.OpenFile(cf.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, DefaultFileMode)
+	if err != nil {
+		panic(err)
+	}
+	err = t.Execute(file, tmplData)
+	if err != nil {
+		panic(err)
+	}
+
+	// Make sure the file executable bit.
+	s, err := file.Stat()
+	if err != nil {
+		panic(err)
+	}
+	file.Chmod(s.Mode() | 0111)
 	file.Close()
-	cf.info, _ = os.Stat(cf.path)
+
+	cf.info, err = os.Stat(cf.path)
+	if err != nil {
+		panic(err)
+	}
 }
