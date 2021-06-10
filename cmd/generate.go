@@ -18,8 +18,8 @@ limitations under the License.
 */
 
 import (
+	"clotas/internal/pkg/clotas"
 	"fmt"
-	"github.com/davidlukac/go-clotas/internal/pkg/clotas"
 	"time"
 
 	"github.com/spf13/cobra"

@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "github.com/davidlukac/go-clotas/cmd"
+import "clotas/cmd"
 
 func main() {
 	cmd.Execute()
