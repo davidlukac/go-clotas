@@ -1,5 +1,5 @@
-// Package cmd /*
-package cmd
+// Package commands /*
+package commands
 
 /*
 Copyright © 2021 NAME HERE <EMAIL ADDRESS>
@@ -20,14 +20,15 @@ limitations under the License.
 import (
 	"fmt"
 	"github.com/davidlukac/go-clotas/internal/pkg/clotas"
+	"time"
 
 	"github.com/spf13/cobra"
 )
 
-// listCmd represents the list command
-var listCmd = &cobra.Command{
-	Use:   "list",
-	Short: "A brief description of your command",
+// generateCmd represents the generate command
+var generateCmd = &cobra.Command{
+	Use:   "generate",
+	Short: "Generate new CLOTA file",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -35,23 +36,35 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("list called")
-		for _, x := range clotas.GetFiles(clotas.DefaultTargetFolder) {
-			fmt.Println(x)
+		t := time.Now()
+
+		// Make sure clotas folder exists
+		clotas.AssureClotasDir(clotas.DefaultTargetFolder)
+
+		// Check for existing files with today's date.
+		existingDayFiles := clotas.GetFileListForDay(clotas.DefaultTargetFolder, t)
+
+		newFile := clotas.ClotaFile{}.New("", -1, nil)
+
+		if len(existingDayFiles) > 0 {
+			newFile = clotas.ClotaFile{}.GetNextFromList(existingDayFiles, clotas.DefaultScriptName)
 		}
+
+		newFile.CreateFile()
+		fmt.Println(fmt.Sprintf("Generating new Clota file %s/%s", clotas.DefaultTargetFolder, newFile.Name))
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(generateCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// listCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// generateCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// listCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// generateCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
